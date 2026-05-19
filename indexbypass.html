@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bypass Tool Pro</title>
+
+<style>
+*{ box-sizing:border-box; }
+
+body {
+    margin: 0;
+    font-family: system-ui, Arial;
+    height: 100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+    background: radial-gradient(circle at top, #1b1a3a, #070712 60%, #050508);
+    color: #e5e7eb;
+}
+
+.credit-banner{
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(255, 193, 7, 0.12);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    color: #facc15;
+    font-size: 12px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.app {
+    width: 92%;
+    max-width: 420px;
+    background: rgba(20, 18, 35, 0.65);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    padding: 22px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    text-align: center;
+    animation: enter 0.9s cubic-bezier(.2,.9,.2,1) both;
+}
+
+@keyframes enter{
+    0%{opacity:0;transform: translateY(50px) scale(0.95);filter: blur(10px);}
+    100%{opacity:1;transform: translateY(0) scale(1);filter: blur(0);}
+}
+
+.credits{font-size:12px;opacity:.65;margin-bottom:10px;color:#a5b4fc;}
+h1{font-size:20px;margin:10px 0 15px;color:#c4b5fd;}
+
+.avatar-label{
+    width:92px;height:92px;border-radius:50%;
+    overflow:hidden;margin:0 auto 15px;
+    border:2px solid rgba(196,181,253,0.4);
+    box-shadow:0 0 25px rgba(167,139,250,0.15);
+}
+.avatar-label img{width:100%;height:100%;object-fit:cover;}
+
+.file-label{
+    display:block;padding:14px;border-radius:14px;
+    background:linear-gradient(135deg,#2a2550,#17162c);
+    border:1px solid rgba(255,255,255,0.08);
+    cursor:pointer;font-weight:600;margin-bottom:10px;
+    transition:.3s;
+}
+.file-label:hover{transform:translateY(-2px);}
+input[type="file"]{display:none;}
+
+button{
+    width:100%;
+    padding:14px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,0.10);
+    background:linear-gradient(135deg,#2b2a55,#141427);
+    color:#e5e7eb;
+    font-weight:700;
+    cursor:pointer;
+    transition:.3s;
+    margin-top:8px;
+}
+button:hover{transform:translateY(-4px) scale(1.02);}
+
+.status-box{
+    margin-top:12px;
+    font-size:13px;
+    padding:12px;
+    border-radius:14px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+}
+
+.status-box.ok{color:#34d399;border-color:rgba(52,211,153,.25);}
+.status-box.empty{color:#fb7185;}
+
+.toast {
+    position: fixed;
+    bottom: 0px; /* empieza abajo */
+    left: 50%;
+    transform: translateX(-50%) translateY(120px);
+
+    background: rgba(10, 10, 20, 0.85);
+    border: 1px solid rgba(255,255,255,0.10);
+
+    padding: 12px 16px;
+    border-radius: 14px;
+
+    font-size: 13px;
+    color: #e5e7eb;
+
+    opacity: 0;
+
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+
+    transition:
+        transform 0.5s cubic-bezier(.2,.9,.2,1),
+        opacity 0.5s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-20px); /* sube desde abajo */
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="credit-banner">
+⚠️ Favor de dejar créditos o desactivo el bypass ⚠️
+</div>
+
+    <div class="credits">BYPASS TOOL • @capybarita_23</div>
+    <h1>BYPASS TOOL PRO</h1>
+
+    <div class="avatar-label">
+        <img src="https://raw.githubusercontent.com/Gamersitogm/Bypass-TikTok-/refs/heads/main/capybara.png">
+    </div>
+
+    <label class="file-label">
+        📁 Seleccionar video MP4
+        <input type="file" id="file" accept="video/mp4">
+    </label>
+
+    <div class="status-box empty" id="videoStatus">
+        🎬 Esperando archivo de video
+    </div>
+
+    <button id="remove">🗑️ Eliminar video</button>
+    <button id="run">⚡ Modificar Video</button>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+const MAX_USES = 2;
+const WINDOW_DAYS = 7;
+const STORAGE_KEY = "bypass_uses";
+
+function canUseTool(){
+    const now = Date.now();
+
+    let uses = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+    // limpiar usos viejos (más de 7 días)
+    uses = uses.filter(t => now - t < WINDOW_DAYS * 24 * 60 * 60 * 1000);
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(uses));
+
+    return uses.length < MAX_USES;
+}
+
+function registerUse(){
+    let uses = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    uses.push(Date.now());
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(uses));
+}
+
+/* sonido */
+const clickSound = new Audio("https://www.image2url.com/r2/default/audio/1779156589501-a9f6b9cb-03f2-4399-9c84-dcc69fe834f6.mp3");
+clickSound.volume = 1.0;
+
+function playClick(){
+    try{
+        clickSound.currentTime = 0;
+        clickSound.play();
+    }catch(e){}
+}
+
+/* toast */
+function showToast(msg,type="info"){
+    const t=document.getElementById("toast");
+    t.textContent=msg;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"),2000);
+}
+
+const fileInput=document.getElementById("file");
+const statusBox=document.getElementById("videoStatus");
+let currentFile=null;
+
+fileInput.onchange=()=>{
+    playClick();
+
+    currentFile=fileInput.files[0];
+    statusBox.textContent="📁 Listo: "+currentFile.name;
+    statusBox.className="status-box ok";
+    showToast("Video cargado","success");
+};
+
+document.getElementById("remove").onclick=()=>{
+    playClick();
+
+    fileInput.value="";
+    currentFile=null;
+    statusBox.textContent="🎬 Esperando archivo de video";
+    statusBox.className="status-box empty";
+    showToast("Video eliminado","warn");
+};
+
+document.getElementById("run").onclick = async () => {
+
+    playClick();
+
+    // 🚫 bloqueo 2 usos por semana
+    if(!canUseTool()){
+        showToast("🚫 Límite alcanzado: 2 usos por semana", "error");
+        return;
+    }
+
+    if(!currentFile){
+        showToast("Selecciona un video", "warn");
+        return;
+    }
+
+    registerUse();
+
+    const buffer = await currentFile.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+
+    /* ===== MOTOR DE BYTES (EL QUE QUERÍAS) ===== */
+
+    const target = [0x65,0x6c,0x73,0x74]; // "elst"
+    const indexes = [];
+
+    for (let i = 0; i < bytes.length - 4; i++) {
+        if (
+            bytes[i] === target[0] &&
+            bytes[i+1] === target[1] &&
+            bytes[i+2] === target[2] &&
+            bytes[i+3] === target[3]
+        ) {
+            indexes.push(i);
+        }
+    }
+
+    if (indexes.length === 0) {
+        showToast("Error en archivo", "error");
+        return;
+    }
+
+    for (const index of indexes) {
+
+        let offset = index;
+
+        for (let i = index; i < index + 50; i++) {
+            if (
+                bytes[i] === 0x00 &&
+                bytes[i+1] === 0x00 &&
+                bytes[i+2] === 0x00 &&
+                bytes[i+3] === 0x00
+            ) {
+                offset = i + 4;
+                break;
+            }
+        }
+
+        const patch = [0x10,0x00,0x00,0x01];
+
+        for (let i = 0; i < patch.length; i++) {
+            bytes[offset + i] = patch[i];
+        }
+    }
+
+    /* ===== EXPORTACIÓN ===== */
+
+    const blob = new Blob([bytes], {type:"video/mp4"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bypassVideo_@capybarita_23.mp4";
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+    showToast("✔ Listo", "success");
+
+    setTimeout(() => {
+        window.location.href = "https://www.tiktok.com/@capybarita_23";
+    }, 1200);
+};
+</script>
+
+</body>
+</html>
