@@ -6,6 +6,7 @@
 <title>Procesador de Video</title>
 
 <style>
+
 *{
     box-sizing:border-box;
 }
@@ -47,7 +48,6 @@ body::before{
 /* PANEL */
 .app{
     position:relative;
-
     width:92%;
     max-width:420px;
 
@@ -180,26 +180,41 @@ button:active{
 .ok{color:#4ade80;}
 .error{color:#f87171;}
 
-.toast{
-    position:fixed;
-    left:50%;
-    bottom:25px;
-    transform:translateX(-50%);
-
-    padding:12px 18px;
-    border-radius:14px;
-
-    background:rgba(0,0,0,0.4);
-    border:1px solid rgba(255,255,255,0.15);
-    backdrop-filter: blur(14px);
-
-    opacity:0;
-    transition:.3s;
+/* PROGRESO */
+.progress-wrap{
+    margin-top:12px;
+    height:0;
+    overflow:hidden;
+    transition: height .3s ease;
 }
 
-.toast.show{opacity:1;}
+.progress-wrap.show{
+    height:40px;
+}
 
-/* 🍮 JELLY ANIMATION */
+.progress-bg{
+    width:100%;
+    height:12px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.1);
+    border:1px solid rgba(255,255,255,0.15);
+    overflow:hidden;
+}
+
+.progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#06b6d4,#2563eb);
+    transition:width .15s;
+}
+
+.progress-text{
+    font-size:12px;
+    margin-top:6px;
+    opacity:.85;
+}
+
+/* JELLY */
 @keyframes jelly {
     0%   { transform: scale(1,1) rotate(0deg); }
     15%  { transform: scale(1.25,0.75) rotate(-2deg); }
@@ -213,10 +228,57 @@ button:active{
 .jelly{
     animation: jelly 0.8s ease;
 }
+
+.modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    background:rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    z-index:99999;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    background:rgba(255,255,255,0.1);
+    border:1px solid rgba(255,255,255,0.2);
+    padding:20px;
+    border-radius:20px;
+    text-align:center;
+    color:white;
+}
+
+@keyframes jelly {
+    0%{transform:scale(1);}
+    30%{transform:scale(1.2,0.8);}
+    60%{transform:scale(0.9,1.1);}
+    100%{transform:scale(1);}
+}
+
+.jelly{
+    animation:jelly .4s ease;
+}
 </style>
 </head>
 
+
+
 <body>
+
+<div id="modal" class="modal">
+  <div class="modal-box" id="modalBox">
+    <h3>¿Cancelar subida?</h3>
+    <p>Se detendrá el proceso.</p>
+
+    <button id="modalNo">No</button>
+    <button id="modalYes">Sí</button>
+  </div>
+</div>
 
 <div class="app">
 
@@ -232,183 +294,266 @@ src="https://raw.githubusercontent.com/Gamersitogm/bypass23/refs/heads/main/capy
 <input type="file" id="file" accept="video/mp4">
 </label>
 
-<div id="status" class="status-box">
-No hay archivo seleccionado
+<div id="status" class="status-box">No hay archivo seleccionado</div>
+
+<div class="progress-wrap">
+    <div class="progress-bg">
+        <div id="progressFill" class="progress-fill"></div>
+    </div>
+    <div id="progressText" class="progress-text">0 MB / 0 MB</div>
 </div>
 
 <button id="remove">Eliminar</button>
-<button id="run">Procesar</button>
+<button id="run">Subir y Procesar</button>
 
 </div>
 
-<div id="toast" class="toast"></div>
-
-<!-- 🎧 AMBIENT -->
 <audio id="ambient" src="https://mp3tourl.com/audio/1781393301050-35d21512-24e6-481a-8b44-fa210a186863.mp3" loop></audio>
-
-<!-- 🔊 CLICK -->
-<audio id="clickSound"
-src="https://www.image2url.com/r2/default/audio/1779156589501-a9f6b9cb-03f2-4399-9c84-dcc69fe834f6.mp3"
-preload="auto"></audio>
+<audio id="clickSound" src="https://www.image2url.com/r2/default/audio/1779156589501-a9f6b9cb-03f2-4399-9c84-dcc69fe834f6.mp3"></audio>
 
 <script>
+
+const modal = document.getElementById("modal");
+const modalBox = document.getElementById("modalBox");
+const modalYes = document.getElementById("modalYes");
+const modalNo = document.getElementById("modalNo");
+
+let uploading = false;
+let xhrUpload = null;
+
 const fileInput = document.getElementById("file");
 const statusBox = document.getElementById("status");
+const progressFill = document.getElementById("progressFill");
+const progressText = document.getElementById("progressText");
 const clickSound = document.getElementById("clickSound");
 const ambient = document.getElementById("ambient");
 const audioBtn = document.getElementById("audioBtn");
 const logo = document.getElementById("logo");
 
+logo.addEventListener("click", ()=>{
+    setTimeout(()=>{
+        window.open("https://www.tiktok.com/@capybarita_23", "_blank");
+    }, 3000);
+});
+
 let currentFile = null;
 let isPlaying = false;
 
-/* 🔊 UNLOCK AUDIO GLOBAL (click inicial) */
-function unlockAudio(){
+/* AUDIO */
+document.addEventListener("pointerdown", ()=>{
     ambient.volume = 0.4;
     ambient.play().catch(()=>{});
-    isPlaying = true;
-    audioBtn.textContent = "🔊";
+},{once:true});
+
+audioBtn.onclick = async ()=>{
+    if(isPlaying){
+        ambient.pause();
+        isPlaying=false;
+        audioBtn.textContent="🔇";
+    }else{
+        await ambient.play();
+        isPlaying=true;
+        audioBtn.textContent="🔊";
+    }
+};
+
+/* CLICK + JELLY FIX REAL */
+
+function openModal(){
+    modal.classList.add("show");
+    modalBox.classList.remove("jelly");
+    void modalBox.offsetWidth;
+    modalBox.classList.add("jelly");
 }
 
-document.addEventListener("pointerdown", unlockAudio, { once:true });
+function closeModal(){
+    modal.classList.remove("show");
+}
 
-/* 🔊 BOTÓN AUDIO */
-audioBtn.addEventListener("click", async () => {
-    try {
-        if (!isPlaying) {
-            ambient.volume = 0.4;
-            await ambient.play();
-            audioBtn.textContent = "🔊";
-            isPlaying = true;
-        } else {
-            ambient.pause();
-            audioBtn.textContent = "🔇";
-            isPlaying = false;
-        }
-    } catch (e) {
-        console.log("Audio error:", e);
-    }
-});
-
-/* 🔊 CLICK SOUND */
 function playClick(){
     clickSound.currentTime = 0;
     clickSound.play().catch(()=>{});
 }
 
-/* 🍮 JELLY */
-function triggerJelly(el){
+function jelly(el){
     el.classList.remove("jelly");
     void el.offsetWidth;
     el.classList.add("jelly");
 }
 
-/* botones + click sound + jelly */
-document.querySelectorAll("button,.file-label,#audioBtn")
-.forEach(el=>{
-    el.addEventListener("click", ()=>{
-        playClick();
-        triggerJelly(el);
+function bindEffects(){
+    document.querySelectorAll(".app button,.file-label,#audioBtn,#logo")
+    .forEach(el=>{
+        el.addEventListener("click", ()=>{
+            playClick();
+            jelly(el);
+        });
     });
-});
-
-/* logo */
-logo.addEventListener("click", () => {
-    playClick();
-    triggerJelly(logo);
-});
-
-/* toast */
-function toast(msg){
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    setTimeout(()=> t.classList.remove("show"), 2500);
 }
 
-/* file */
+window.addEventListener("DOMContentLoaded", bindEffects);
+
+
+/* FILE */
 fileInput.addEventListener("change", ()=>{
     currentFile = fileInput.files[0];
 
-    if(currentFile){
-        statusBox.textContent = "Archivo: " + currentFile.name;
-        statusBox.className = "status-box ok";
-        toast("Archivo cargado");
-    }
+    if(!currentFile) return;
+
+    const mb = (currentFile.size/1024/1024).toFixed(2);
+
+    statusBox.textContent = `Archivo: ${currentFile.name} (${mb} MB)`;
+    
+    document.querySelector(".progress-wrap").classList.add("show");
+    
+    progressText.textContent = `0 MB / ${mb} MB`;
 });
 
-/* remove */
-document.getElementById("remove").onclick = ()=>{
-    fileInput.value = "";
-    currentFile = null;
-    statusBox.textContent = "No hay archivo seleccionado";
-    statusBox.className = "status-box";
-    toast("Archivo eliminado");
-};
+/* REMOVE */
+const removeBtn = document.getElementById("remove");
 
-/* process */
-document.getElementById("run").onclick = async ()=>{
+removeBtn.onclick = () => {
 
-    if(!currentFile){
-        toast("Selecciona un archivo");
+    if (uploading) {
+        openModal();
+
+        modalNo.onclick = closeModal;
+
+        modalYes.onclick = () => {
+            closeModal();
+
+            if (xhrUpload) xhrUpload.abort();
+
+            uploading = false;
+
+            statusBox.textContent = "Subida cancelada";
+            progressFill.style.width = "0%";
+            progressText.textContent = "0 MB / 0 MB";
+
+            removeBtn.textContent = "Eliminar";
+        };
+
         return;
     }
 
-    try{
+    // RESET normal (ELIMINAR)
+    fileInput.value = "";
+    currentFile = null;
+    
+    document.querySelector(".progress-wrap").classList.remove("show");
+progressFill.style.width = "0%";
 
-        statusBox.textContent = "Subiendo archivo...";
-        statusBox.className = "status-box ok";
+    statusBox.textContent = "No hay archivo seleccionado";
+    progressText.textContent = "0 MB / 0 MB";
+};
 
-        const formData = new FormData();
-        formData.append("file", currentFile);
+/* UPLOAD PROGRESS */
+function upload(file){
 
-        const upload = await fetch("https://api.kuronaiapp.com/upload/", {
-            method: "POST",
-            body: formData
-        });
+    return new Promise((res,rej)=>{
 
-        const data = await upload.json();
+        uploading = true;
 
-        if(!data.file_id){
-            throw new Error("No file_id");
+        const xhr = new XMLHttpRequest();
+        xhrUpload = xhr;
+
+        const form = new FormData();
+        form.append("file",file);
+
+        xhr.open("POST","https://api.kuronaiapp.com/upload/");
+
+        xhr.upload.onprogress = (e)=>{
+            if(e.lengthComputable){
+
+                const p = (e.loaded/e.total)*100;
+
+                progressFill.style.width = p+"%";
+
+                progressText.textContent =
+                `${(e.loaded/1024/1024).toFixed(2)} MB / ${(e.total/1024/1024).toFixed(2)} MB`;
+            }
+        };
+
+        xhr.onload=()=>{
+            uploading = false;
+            removeBtn.textContent = "Eliminar";
+
+            res(JSON.parse(xhr.responseText));
+        };
+
+        xhr.onerror=()=>{
+            uploading = false;
+            rej();
+        };
+
+        xhr.onabort=()=>{
+            uploading = false;
+            rej("cancelled");
+        };
+
+        xhr.send(form);
+    });
+}
+
+   
+/* RUN */
+
+document.getElementById("run").onclick = async () => {
+    if (uploading) return;
+    if (!currentFile) {
+        statusBox.textContent = "Selecciona archivo";
+        return;
+    }
+
+    uploading = true;
+
+    const runBtn = document.getElementById("run");
+    runBtn.disabled = true;
+    removeBtn.textContent = "Cancelar";
+
+    try {
+        statusBox.textContent = "Subiendo...";
+
+        const data = await upload(currentFile);
+
+        let r;
+        let ok = false;
+
+        for (let i = 0; i < 30; i++) {
+            r = await fetch("https://api.kuronaiapp.com/download/" + data.file_id);
+
+            if (r.ok) {
+                ok = true;
+                break;
+            }
+
+            await new Promise(x => setTimeout(x, 1500));
         }
 
-        statusBox.textContent = "Procesando...";
+        if (!ok) throw new Error("No listo");
 
-        let response;
-
-        for(let i=0;i<20;i++){
-            response = await fetch("https://api.kuronaiapp.com/download/" + data.file_id);
-            if(response.ok) break;
-            await new Promise(r=>setTimeout(r,1500));
-        }
-
-        if(!response || !response.ok){
-            throw new Error("No listo");
-        }
-
-        const blob = await response.blob();
+        const blob = await r.blob();
         const url = URL.createObjectURL(blob);
 
         const a = document.createElement("a");
         a.href = url;
         a.download = "video.mp4";
-        document.body.appendChild(a);
         a.click();
-        a.remove();
 
         URL.revokeObjectURL(url);
 
-        statusBox.textContent = "Proceso completado";
-        toast("Descarga iniciada");
+        statusBox.textContent = "Listo";
 
-    }catch(err){
+    } catch (e) {
         statusBox.textContent = "Error en proceso";
-        statusBox.className = "status-box error";
-        toast("Error");
     }
-};
-</script>
 
+    uploading = false;
+    runBtn.disabled = false;
+    removeBtn.textContent = "Eliminar";
+};
+
+    
+</script>
 </body>
 </html>
