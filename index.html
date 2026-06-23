@@ -458,7 +458,8 @@ function upload(file){
         xhrUpload = xhr;
 
         const form = new FormData();
-        form.append("file",file);
+form.append("file", file);
+form.append("tg_id", localStorage.getItem("kuronai_tg_id") || "7827933639");
 
         xhr.open("POST","https://api.kuronaiapp.com/upload/");
 
