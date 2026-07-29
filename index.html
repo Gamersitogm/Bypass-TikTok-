@@ -516,6 +516,8 @@ document.getElementById("run").onclick = async () => {
         statusBox.textContent = "Subiendo...";
 
         const data = await upload(currentFile);
+        
+        statusBox.textContent = "Procesando en el servidor...";
 
         let r;
         let ok = false;
@@ -538,12 +540,12 @@ document.getElementById("run").onclick = async () => {
 
         const a = document.createElement("a");
         a.href = url;
-        a.download = "DEJACREDITOS_O_ELIMINO_LA_PAGINA_😡_CREDITOS:@capybarita_23.mp4";
+        a.download = "@capybarita_23.mp4";
         a.click();
 
         URL.revokeObjectURL(url);
 
-        statusBox.textContent = "Listo";
+        statusBox.textContent = "Listo (Por favor, deja créditos)";
 
     } catch (e) {
         statusBox.textContent = "Error en proceso";
