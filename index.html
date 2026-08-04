@@ -327,7 +327,8 @@ src="https://raw.githubusercontent.com/Gamersitogm/bypass23/refs/heads/main/capy
 
 <button id="remove">Eliminar</button>
 <button id="run">Subir y Procesar</button>
-<button id="cambiar">procesador de videos local</button>
+<button id="cambiar">procesador de videos local (pesado)</button>
+<button id="subirVideo">Subir video (TikTok)</button>
 
 
 
@@ -595,14 +596,12 @@ document.getElementById("run").onclick = async () => {
 
         URL.revokeObjectURL(url);
 
-        statusBox.textContent = "Listo (Por favor, deja créditos)";
+        statusBox.textContent = "Descargando...";
         
-        setTimeout(() => {
-    window.location.href = "https://www.tiktok.com/tiktokstudio/upload";
-}, 4000);
+        
 
     } catch (e) {
-        statusBox.textContent = "Error en proceso";
+        statusBox.textContent = "Error en fatal!";
     }
 
     uploading = false;
@@ -620,6 +619,11 @@ document.getElementById("cambiar").onclick = () => {
     iframe.style.display = "block";
 
 };
+
+document.getElementById("subirVideo").onclick = () => {
+    window.location.href = "https://www.tiktok.com/tiktokstudio/upload";
+};
+
 </script>
 
 
