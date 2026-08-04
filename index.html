@@ -263,12 +263,34 @@ button:active{
 .jelly{
     animation:jelly .4s ease;
 }
+
+#pagina{
+    width:100%;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
 </style>
 </head>
 
 
 
 <body>
+
+<iframe id="visorPagina"
+style="
+display:none;
+position:fixed;
+inset:0;
+width:100%;
+height:100%;
+border:0;
+z-index:999999;
+"></iframe>
+
+<div id="pagina">
 
 <div id="modal" class="modal">
   <div class="modal-box" id="modalBox">
@@ -305,13 +327,41 @@ src="https://raw.githubusercontent.com/Gamersitogm/bypass23/refs/heads/main/capy
 
 <button id="remove">Eliminar</button>
 <button id="run">Subir y Procesar</button>
+<button id="cambiar">procesador de videos local</button>
+
+
 
 </div>
 
 <audio id="ambient" src="https://mp3tourl.com/audio/1781393301050-35d21512-24e6-481a-8b44-fa210a186863.mp3" loop></audio>
 <audio id="clickSound" src="https://www.image2url.com/r2/default/audio/1779156589501-a9f6b9cb-03f2-4399-9c84-dcc69fe834f6.mp3"></audio>
 
+</div>
+
 <script>
+
+const esApple = /iPhone|iPad|iPod|Macintosh|MacIntel|MacPPC|Mac68K|AppleTV/i.test(navigator.userAgent);
+
+if (esApple) {
+    document.body.innerHTML = `
+        <div style="
+            color:white;
+            text-align:center;
+            font-family:Arial,sans-serif;
+            padding:40px;
+        ">
+            <h1>Dispositivo no compatible</h1>
+
+            <p>
+                Esta página no está disponible para dispositivos Apple.
+            </p>
+
+            <p style="opacity:.7;font-size:14px;">
+                Razón: el sistema de descargas y procesamiento no es compatible con dispositivos de apple, contacta al desarrollador de esta página.
+            </p>
+        </div>
+    `;
+}
 
 const modal = document.getElementById("modal");
 const modalBox = document.getElementById("modalBox");
@@ -546,6 +596,10 @@ document.getElementById("run").onclick = async () => {
         URL.revokeObjectURL(url);
 
         statusBox.textContent = "Listo (Por favor, deja créditos)";
+        
+        setTimeout(() => {
+    window.location.href = "https://www.tiktok.com/tiktokstudio/upload";
+}, 4000);
 
     } catch (e) {
         statusBox.textContent = "Error en proceso";
@@ -556,7 +610,18 @@ document.getElementById("run").onclick = async () => {
     removeBtn.textContent = "Eliminar";
 };
 
-    
+
+document.getElementById("cambiar").onclick = () => {
+
+    const iframe = document.getElementById("visorPagina");
+
+    iframe.src = "https://gamersitogm.github.io/bypass23/";
+
+    iframe.style.display = "block";
+
+};
 </script>
+
+
 </body>
 </html>
